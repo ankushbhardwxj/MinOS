@@ -21,3 +21,39 @@ So to display a char on the screen we need to set its ASCII code to correct memo
 which is 0xb8000. 
 Note: the screen is displayed as rows and columns, video memory is simply sequential. address of 
 column 5 and row 3 is : 0xb8000 + 2 * (row * 80 + col)
+
+Making the gdt 
+- Initialise the gdt
+- Make the code and data segments and include the flags
+- Find the size of the gdt
+- know when to use dd, dw , db
+
+Make the switch using gdt
+- disable interrupts using cli (clear interrupt)
+This is used because interrupt handling is implemented differently
+than 16bit.
+- tell CPU about the gdt that we just prepared
+    lgdt [gdt_descriptor]
+- to make the actual switch, we set the first bit of a special
+    CPU control register called the cr0. We cant do this directly so
+    we use a general purpose register
+
+    mov eax, cr0
+    or eax, 0x1
+    mov cr0, eax 
+    After cr0 is updated the CPU is in 32 bit mode.
+- modern processors use a technique called pipelining when programming 
+the CPU. In pipelining, CPU needs to know the next few steps to
+decide the mode in which instruction will occur. So we might need
+to declare a far jmp to another segment that would force CPU to 
+flush the pipeline (ie complete all instructions currently in 
+different stages of pipeline)
+This is done as follows:
+
+    jmp <segment>:<address offset>
+
+- [bit 32] directive is used to tell assembler that from that point 
+onwards, it should encode in 32 bit mode instructions. Note that 
+doesnt mean that we cannot use 32 bit instruction in 16 bit real mode.
+
+- Make a routine to convert all 16 bit registers to 32 bit.
