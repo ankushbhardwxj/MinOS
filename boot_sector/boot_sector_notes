@@ -1,0 +1,143 @@
+Registers - ax,bx,cx,dx
+Now each register has high and low bits..ah,al,bh,bl which can be used to shift data and move data
+Initialisation can be done in 2 ways using:
+org keyword - [org 0x7c00]
+or without using org keyword as
+mov ah, 0x0e ; int 10/ah = 0eh -> scrolling teletype BIOS routine
+End your code with the magic number: 
+times 510-($-$$) db 0
+dw 0xaa55
+The aa and 55 bits are the 511th and 512th bit that allows BIOS to identify that a boot sector exists.
+
+Operation "move" 
+this basically copies the second argument to first
+mov ax, 0 --> moves 0 to ax
+Interrupt : we can invoke a specific BIOS routine by setting ax to some BIOS-defined value and then 
+	triggering a specific interrupt. The specific routine we want is the BIOS scrolling tele-type
+	routine, which will print a single character on the screen and advance the cursor.
+We need to interrupt 0x10 and to set ah to 0x0e and al to the ASCII code of the character we wish to print.
+In hex table , 0x10 comes under 0x0e. 
+
+Define strings :
+my_string :
+db 'Boot OS' //db translates to declare byte of data
+
+my_string :
+db 'Boot OS',0 //makes a null terminating string
+
+Stack :
+This stack is used because we require more memory. Since we have limited registers and have only 510 bytes of
+memory to ourselves, it is important to implement a stack where memory addresses can be specified for 
+particular processes. We dont care where data is stored, but we must be able to retrieve without loss.
+CPU offers 2 instructions - push and pop, allows to store and retrieve from the top of the stack.
+2 registers* are used to implement stack : bp and sp, maintains addresses of stack base and top.
+When we push, element is stored below and bp and sp's value gets decremented by size of the element.
+
+Control Structures :
+jmp $ : jumps or loops indefinitely.
+je target : jump if equal
+jne : jump if unequal
+jl, jle, jg, jge 
+
+if-else statements:
+In C++,
+if(ax == 4){
+	bx = 23;
+} else {
+	bx = 45;
+}
+In Assembly,
+cmp ax, 4 //compare ax to 4
+je then_block //jump to then_block if equal
+mov bx, 45  //otherwise execute this code
+jmp the_end //jump over the then block so we dont execute that code
+
+then_block:
+	mov bx,23
+the_end:
+
+Calling Functions:
+...
+...
+mov al, 'H'
+jmp my_print_function
+return_to_here :
+...
+...
+my_print_function:
+mov ah, 0x0e
+int 0x10
+jmp return_to_here
+note how al is used as a parameter. The caller and callee must have some agreement on where and how 
+many parameters will be passed.
+it will always the same address return_to_here. We cannot explicitly declare where to return.
+CPU keeps track of the current instruction being executed in a special register called the 
+ip (instruction pointer). CPU provides a pair of instructions call and ret, which do exactly what we want:
+call behaves like jmp but additionally, before actually jumping , pushes the return object on the stack;
+ret then pops the return address off the stack and jumps to it.
+...
+mov al, 'H'
+call my_print_function
+...
+...
+my_print_function:
+	mov ah,0x0e
+	int 0x10
+	ret
+CPU implements two convinient instructions pusha and popa that conviniently push and pop all registers
+to and from the stack respectively.
+
+...
+some_function:
+pusha //push all register values to the stack
+mov bx, 10
+add bx, 20
+mov ah, 0x0e
+int 0x10
+popa //pop register values from the stack
+ret
+
+Include Files 
+nasm allows us to include external files as follows:
+%include "my_print_function.asm"
+...
+mov al, 'H'
+call my_print_function
+
+Segmentation:
+We cannot fit an OS in 512 bytes of data so we have to find ways to extend it.
+CPU has 4 special registers called segment registers-cs,ds,ss,es.
+Main memory is divided into segments.
+ds - data segment
+ss - stack segment
+
+Segment offsetting : We can imagine main memory as being divided into segments that are indexed by 
+the segment registers, such that when we specify a 16 bit address , the CPU automatically calculates the
+absolute address as the appropriate segment's start address offsetted by our specific address.
+By appropriate segment, we mean that unless explicitly told otherwise, the CPU will offset our address
+from the segment register appropriate for the context of our instruction.
+eg: the address used in instruction mov ax, [0x45ef] would by default be offset from the data segment,
+indexed by ds, similarly stack segment ss is used to modify the actual location of the stack's base 
+pointer, bp.
+
+potential doubts:
+print_hex Functions
+print_string Functions
+
+
+Hex_codes:
+Hexadecimal to binary conversion
+0 - 9 = 0 - 9
+10 = A
+11 = B
+.
+.
+15 = F. Total we have 16 bits.
+0x is used to denote hexadecimal system. Look for remaining 4 bits for address.
+
+
+print_hex :
+we have a hex code given to a print_hex function. The hex code should be printed on the screen
+print_hex(0x1fb6) --> 0x1fb6
+
+read comments from code for the booting from hard drive part.
