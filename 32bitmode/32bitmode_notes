@@ -1,0 +1,23 @@
+Transforming from 16bit to 32bit
+- registers are extended to 32 bits. add an 'e' to register names. eg: ebx, eal, eah...
+- for convinience there are 2 gen purpose registers, fs and gs.
+- 32 bit offsets are available, eg 0xffffffff denotes 4gb of memory.
+- Sophisticated segmentation and Interrupt handling.
+
+GDT - global descriptor table - defines memory segments and their protected mode attributes.
+Once we have defined the GDT, we can use a special instruction to load it into the CPU,
+before setting a single bit in a special CPU control register to make the actual switch.
+GDT is necessary to load the kernel.
+
+We can no longer use BIOS once we have switched to 32bit protected mode.
+So, 32 bit machines must provide its own drivers for all hardware of the machine.
+
+Printing on screen- Earlier in BIOS we used an interrupt to print what we wanted. But in 32 bit mode
+we have 2 modes of display - text mode and graphics mode which is used by manipulating the memory range
+of the respective mode. When computers boot they begin in VGA mode. Therefore, programmer doesnt need
+to render individual pixels to describe specific char, since a simple font is already defined in 
+the internal memory of the VGA display device.
+So to display a char on the screen we need to set its ASCII code to correct memory address for VGA mode
+which is 0xb8000. 
+Note: the screen is displayed as rows and columns, video memory is simply sequential. address of 
+column 5 and row 3 is : 0xb8000 + 2 * (row * 80 + col)
