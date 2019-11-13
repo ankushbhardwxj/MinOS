@@ -1,30 +1,15 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h)
-OBJ = ${C_SOURCES:.c=.o}
+.PHONY: all run next1 next2 next3 next4 next5
+all: run next1 next2 next3 next4 next5
+
+run: gcc -ffreestanding -c kernel.c -o kernel.o
+
+next1: nasm kernel_entry.asm -f elf64 -o kernel_entry.o
+
+next2: ld -o kernel.bin -Ttext 0x1000 kernel_entry.o kernel.o --oformat binary
+next3: nasm bootsect.asm -f bin -o bootsect.bin
+next4: cat bootsect.bin kernel.bin > os-image.bin
+next5: qemu-system-x86_64 -fda os-image.bin --curses
 
 
-CFLAGS = -g
-
-os-image.bin: bootsect.bin kernel.bin
-	cat $^ > os-image.bin
-
-kernel.bin: kernel_entry.o ${OBJ}
-	ld -o $@ -Ttext 0x1000 $^ --oformat binary
-kernel.elf: kernel_entry.o ${OBJ}
-	ld -o $@ -Ttext 0x1000 $^
-run: os-image.bin
-	qemu-system-x86_64 -fda os-image.bin --curses
-debug: os-image.bin kernel.elf
-	qemu-system-x86_64 -s -fda os-image.bin &
-	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
-
-%.o: %.c ${HEADERS}
-	${CC} ${CFLAGS} -ffreestanding -c %< -o $@
-
-%.o: %.asm
-	nasm $< -f -elf -o $@
-
-%.bin: %.asm
-	nasm $< -f bin -o $@
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf

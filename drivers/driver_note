@@ -6,7 +6,13 @@ I/O programming: How do we read and write registers of our device controllers?
 In Intel arch, the registers of device controllers are mapped into an I/O address space,
 that is separate from the main memory address space.
 The floppy disk controller described earlier usually has its DOR register mapped to I/O
-address 0x3F2.
+address 0x3F2. We need to switch the motor of the first drive. We use I/O instructions 
+in and or to reed and write data to the I/O address.
+
+	mov dx, 0x3f2  //must use dx to store port address
+	in al, dx	//read contents of the port to AL
+	or al, 00001000b //switch on the motor bit
+	out dx, al        //update DOR of the device
 
 We can use assembly in C code as snippets as follows: 
 __asm__("in %%dx, %%al" : "=a" (result) : "d" (port));
@@ -29,3 +35,22 @@ Basic Screen driver implementations:
 Although we could write all the code in kernel.c that contains the kernel's entry function main(), it 
 is good to organise such functionality-specific code into its own file, which can be compiled and linked 
 to our kernel code.
+
+We first make a C program with the low level functions required for the I/O port and the display buffer.
+We basically implemented the above assembly code in a C program inside the kernel folder.
+
+Now we implement the screen driver
+We make two files screen.h and screen.c - the header file contains some basic constants
+and the screen.c contains the following functions depending on the things we want to implement.
+We know that video memory is simply a specific range of memory address where each char cell is 
+represented by 2 bytes, the first byte is the ASCII code of the char and second byte allows us
+to set the colourscheme of the char-cell. 
+print_char()
+we could define this function by making use of other functions that we will define get_cursor(),
+set_cursor(), get_screen_offset() and handle_scrolling().
+
+get_screen_offset : this function will map row and colm cordinates to the memory offset of a 
+particular display character cell from the start of video memory. The mapping is straight
+forward, but we must remember that each cell holds 2 bytes.
+
+clear_function : tidy up screen by writing blank characters at every position.

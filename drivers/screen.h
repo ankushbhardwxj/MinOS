@@ -1,15 +1,12 @@
-#define VIDEO_ADDRESS 0xb8000 //set video address for printing text / strings
-//declare the size of the screen
+//define some constants to make code readable in screen.c
+#define VIDEO_ADDRESS 0xb8000 //display buffer address
+//define the screen resolution
 #define MAX_ROWS 25
 #define MAX_COLS 80
-#define WHITE_ON_BLACK 0x0f //0x0f means 15 which indicates white color
-#define RED_ON_WHITE 0xf4 //0xf4 represents red colour
+//set default color scheme - White on black
+//color scheme number is 15 denoted by 0x0f
+#define WHITE_ON_BLACK 0x0f
 
-//screen IO ports
-#define REG_SCREEN_CTRL 0x3d4
-#define REG_SCREEN_DATA 0x3d5
-
-//public kernel
-void clear_screen(); //to clear the screen
-void kprint_at(char *message, int col, int row); //print a message at specific place
-void kprint(char *message);
+//screen device I/O ports
+#define REG_SCREEN_CTRL 0x3D4
+#define REG_SCREEN_DATA 0x3D5
