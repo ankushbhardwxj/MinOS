@@ -1,0 +1,31 @@
+I/O Bus : CPU would talk directly to device controllers, with ever increasing CPU speeds, that would require the
+CPU to artificially to slow down to the same speed as the slowest device, so it practical to issue instructions
+to a top level I/O bus.
+
+I/O programming: How do we read and write registers of our device controllers?
+In Intel arch, the registers of device controllers are mapped into an I/O address space,
+that is separate from the main memory address space.
+The floppy disk controller described earlier usually has its DOR register mapped to I/O
+address 0x3F2.
+
+We can use assembly in C code as snippets as follows: 
+__asm__("in %%dx, %%al" : "=a" (result) : "d" (port));
+
+gcc adopts a different assembly syntax called GAS, where the target and destination operands are
+reversed with respect to the syntax of our more familiar nasm syntax. Also % is used to denote registers
+and requires an ugly %%, since % is an escape character of C compiler.
+
+DMA - direct memory access
+Since port I/O involves read/write of individual bytes or words, transfer of large amounts of data b/w 
+disk device and memory could take up a great deal of better spent CPU time. Therefore, we require DMA.
+
+Screen Driver - 
+We can have characters displayed on the screen by writing them somewhere within the display
+buffer at address 0xb8000, but we dont want to keep worrying aboyt that sort of low level manipulation
+in our kernel. It would be better if we could create an abstraction of the screen that would allow 
+us to write print(''Hello'') and perhaps clear_screen().
+
+Basic Screen driver implementations: 
+Although we could write all the code in kernel.c that contains the kernel's entry function main(), it 
+is good to organise such functionality-specific code into its own file, which can be compiled and linked 
+to our kernel code.
