@@ -24,6 +24,9 @@ KERNEL_OFFSET equ 0x1000
 load_kernel:
 	mov bx, MSG_LOAD_KERNEL
 	call print
+	call print_n1
+	mov bx, MSG_AUTHOR_KERNEL
+	call print
 
 	call print_n1
 
@@ -44,6 +47,7 @@ BOOT_DRIVE db 0
 MSG_REAL_MODE db "Started in 16 bit Real Mode",0
 MSG_PROT_MODE db "Landed in 32 bit Protected Mode",0
 MSG_LOAD_KERNEL db "Loaded kernel into memory",0
+MSG_AUTHOR_KERNEL db "This kernel is created by Ankush Bhardwaj",0
 
 ;padding
 times 510-($-$$) db 0

@@ -1,5 +1,4 @@
-display_library: sdl
-floppya: 1_44=os-image.bin, status=inserted
+floppya: 1_44=os-image, status=inserted
 boot: a
 log: bochsout.txt
 

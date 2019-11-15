@@ -2,7 +2,7 @@
 all: os-image
 #Run bochs to simulate booting
 run: all
-	qemu-system-x86_64 -fda os-image --curses
+	bochs
 #This is the actual disk image that the computer loads,
 #which is the combination of our compiled bootsector and kernel
 os-image : bootsect.bin kernel.bin
