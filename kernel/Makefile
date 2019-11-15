@@ -1,15 +1,25 @@
-.PHONY: all run next1 next2 next3 next4 next5
-all: run next1 next2 next3 next4 next5
-
-run: gcc -ffreestanding -c kernel.c -o kernel.o
-
-next1: nasm kernel_entry.asm -f elf64 -o kernel_entry.o
-
-next2: ld -o kernel.bin -Ttext 0x1000 kernel_entry.o kernel.o --oformat binary
-next3: nasm bootsect.asm -f bin -o bootsect.bin
-next4: cat bootsect.bin kernel.bin > os-image.bin
-next5: qemu-system-x86_64 -fda os-image.bin --curses
-
-
-clean:
-	rm -rf *.bin *.dis *.o os-image.bin *.elf
+#Default make target
+all: os-image
+#Run bochs to simulate booting
+run: all
+	qemu-system-x86_64 -fda os-image --curses
+#This is the actual disk image that the computer loads,
+#which is the combination of our compiled bootsector and kernel
+os-image : bootsect.bin kernel.bin
+	cat $^ > os-image
+#Build the kernel binary
+kernel.bin : kernel_entry.o kernel.o
+	ld -o kernel.bin -Ttext 0x1000 $^ --oformat binary
+#Build the kernel object file
+kernel.o : kernel.c
+	gcc -ffreestanding -c $< -o  $@
+#Build the kernel entry object file
+kernel_entry.o : kernel_entry.asm
+	nasm $< -f elf64 -o $@
+#Assemble the bootsector to raw machine code
+bootsect.bin : bootsect.asm
+	nasm $< -f bin -I './' -o $@ 
+clean :
+	rm  -rf *.bin *.o os-image *.map
+kernel.dis : kernel.bin
+	ndisasm -b 32 $< > $@
